@@ -94,3 +94,19 @@ Pass `--observed-steps 0` to preserve observations across the full simulation wi
 If `--output` already exists and already contains every required identifier
 and timestamp (and is not all-NaN), it's reused as-is and no USGS data is re-fetched. Otherwise
 the full dataframe is (re)fetched from USGS and the file is overwritten.
+
+## USGS rate limits
+
+Without an API key the USGS Water Data API rate-limits requests quickly. The
+underlying `hydrotools` client does not raise on a rate-limited (HTTP 429)
+request; it drops it, which would make those gages look like they have no data.
+`troute-usgsdf` detects failed requests and stops with a `USGSRateLimitError`
+(or `USGSRequestError` for other failures) instead of writing a dataframe full
+of false nulls. No output file is written when this happens.
+
+To get higher limits, request a free key at https://api.waterdata.usgs.gov/signup
+and set it before running:
+
+```bash
+export HYDROTOOLS_USGS_API_KEY=your-key
+```
