@@ -2,16 +2,22 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import numpy as np
 
-def _decode_gage(row) -> str:
-    """RouteLink stores gage ids as fixed-width character arrays; join and strip."""
-    try:
-        return "".join(
-            ch.decode("utf-8") if isinstance(ch, (bytes, bytearray)) else str(ch)
-            for ch in row
-        ).strip()
-    except Exception:
-        return str(row).strip()
+
+def _gage_strings(gages: np.ndarray) -> np.ndarray:
+    """Turn RouteLink's gage variable into a 1-D array of stripped byte strings.
+
+    RouteLink stores gage ids as a fixed-width (link, IDLength) char array padded
+    with spaces. Viewing each row as one fixed-width string avoids a Python-level
+    loop over all ~2.7M CONUS links.
+    """
+    gages = np.asarray(gages)
+    if gages.ndim == 2:  # (link, IDLength) of single chars
+        gages = np.ascontiguousarray(gages).view(f"S{gages.shape[1]}").ravel()
+    elif gages.dtype.kind == "U":  # netCDF4 already joined them into str
+        gages = np.char.encode(gages, "utf-8")
+    return np.char.strip(gages.astype(bytes))
 
 
 def read_route_link_gages(route_link_nc_path: Path) -> dict[int, str]:
@@ -23,15 +29,17 @@ def read_route_link_gages(route_link_nc_path: Path) -> dict[int, str]:
             raise ValueError(
                 f"RouteLink file {route_link_nc_path} must contain 'link' and 'gages' variables"
             )
-        links = ds.variables["link"][:]
-        gages_var = ds.variables["gages"][:]
+        ds.set_auto_mask(False)
+        links = np.asarray(ds.variables["link"][:])
+        gages = _gage_strings(ds.variables["gages"][:])
 
-    link_to_gage: dict[int, str] = {}
-    for i, row in enumerate(gages_var):
-        gage = _decode_gage(row)
-        if gage:
-            link_to_gage[int(links[i])] = gage
-    return link_to_gage
+    has_gage = gages != b""
+    return dict(
+        zip(
+            links[has_gage].astype(np.int64).tolist(),
+            np.char.decode(gages[has_gage], "utf-8").tolist(),
+        )
+    )
 
 
 def read_link_mask(mask_path: Path) -> set[int]:
