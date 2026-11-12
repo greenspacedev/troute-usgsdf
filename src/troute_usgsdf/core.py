@@ -12,8 +12,18 @@ from .usgs import fetch_usgs_streamflow, interpolate_to_grid
 # fetch padding on each side of the simulation window so the
 # grid edges can be interpolated rather than extrapolated
 PAD = pd.Timedelta(hours=3)
-# data assimilation lookback window before simulation start
-LOOKBACK = pd.Timedelta(hours=1)
+# Data assimilation lookback window before simulation start.
+#
+# NOTE (2026-11-12): kept at 0 on purpose; check this before merging with alk05's
+# `lookback` branch, which defaults to 1 h. t-route's feather DA path
+# (nwm_routing/__main__.py, update_for_feather_da) loads this table after the
+# step that trims it to t0, and the kernel reads observations by column
+# position, with column 0 = t0. Any column before start_datetime therefore
+# shifts every observation later: with 1 h, the 23:00 reading is applied at
+# 00:00, and nudging runs 70 min instead of 10. Verified: the same table with
+# and without the pre-t0 columns changed t-route flows on 6,097 segments (up to
+# 514 m3/s). Raise this only once t-route uses or trims the pre-t0 columns.
+LOOKBACK = pd.Timedelta(0)
 
 
 def _incompleteness_reason(

@@ -97,11 +97,13 @@ def main(
         ),
     ),
     lookback_hours: float = typer.Option(
-        1.0,
+        0.0,
         "--lookback-hours",
         help=(
             "Hours of data assimilation lookback before simulation start time "
-            "(default: 1.0)."
+            "(default: 0). Leave at 0 for t-route's feather DA: it reads columns "
+            "by position from t0, so earlier columns shift observations later "
+            "(see LOOKBACK in core.py)."
         ),
     ),
 ) -> None:
