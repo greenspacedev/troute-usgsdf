@@ -88,6 +88,7 @@ Pass `--observed-steps 0` to preserve observations across the full simulation wi
 | `--dt INTEGER` | Routing/forcing timestep in seconds (default: `300`). |
 | `--output PATH` | Path to write the output `.feather` file. |
 | `--observed-steps INTEGER` | Number of timesteps to keep populated before NaN truncation (default: `2`; `0` keeps full window). |
+| `--pad-hours FLOAT` | USGS fetch padding around the window, for interpolation at t0 (default: `24`). |
 
 ## Output Caching
 

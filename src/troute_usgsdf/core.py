@@ -10,8 +10,9 @@ from .routelink import read_gage_crosswalk_route_link, read_link_mask
 from .usgs import fetch_usgs_streamflow, interpolate_to_grid
 
 # fetch padding on each side of the simulation window so the
-# grid edges can be interpolated rather than extrapolated
-PAD = pd.Timedelta(hours=3)
+# grid edges can be interpolated rather than extrapolated. 24 h: gages offline
+# for a few hours around t0 still get a t0 value (3 h left them NaN, unnudged).
+PAD = pd.Timedelta(hours=24)
 # Data assimilation lookback window before simulation start.
 #
 # NOTE (2026-11-12): kept at 0 on purpose; check this before merging with alk05's

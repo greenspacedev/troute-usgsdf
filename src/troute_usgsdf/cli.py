@@ -89,11 +89,11 @@ def main(
         ),
     ),
     pad_hours: float = typer.Option(
-        3.0,
+        24.0,
         "--pad-hours",
         help=(
             "Hours of padding on each side of the simulation window when fetching USGS observations "
-            "(default: 3.0)."
+            "(default: 24.0)."
         ),
     ),
     lookback_hours: float = typer.Option(
